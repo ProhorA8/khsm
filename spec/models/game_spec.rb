@@ -117,4 +117,41 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.current_game_question).to eq(game_w_questions.game_questions.first)
     end
   end
+
+  context '.answer_current_question!' do
+    let(:question) { game_w_questions.current_game_question }
+    it 'correct answer - returns true' do
+      expect(game_w_questions.answer_current_question!(question.correct_answer_key)).to be(true)
+      expect(game_w_questions.status).to eq(:in_progress)
+      expect(game_w_questions.finished?).to be(false)
+    end
+
+    it 'wrong answer - returns false' do
+      expect(game_w_questions.answer_current_question!('a')).to eq(false)
+      expect(game_w_questions.status).to eq(:fail)
+      expect(game_w_questions.finished?).to be(true)
+    end
+
+    it 'expired game - returns false' do
+      game_w_questions.created_at = 1.hour.ago
+      expect(game_w_questions.answer_current_question!(question.correct_answer_key)).to be(false)
+      expect(game_w_questions.status).to eq(:timeout)
+      expect(game_w_questions.finished?).to be(true)
+    end
+
+    it 'finished game - returns false' do
+      game_w_questions.finished_at = Time.now
+      expect(game_w_questions.answer_current_question!(question.correct_answer_key)).to be(false)
+      expect(game_w_questions.finished?).to be(true)
+    end
+
+    it 'on last correct question - returns true' do
+      game_w_questions.current_level = 14
+      expect(game_w_questions.answer_current_question!(question.correct_answer_key)).to be(true)
+      expect(game_w_questions.finished?).to be(true)
+      expect(user.balance).to eq game_w_questions.prize
+      expect(game_w_questions.status).to eq(:won)
+      expect(game_w_questions.finished?).to be(true)
+    end
+  end
 end
