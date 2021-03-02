@@ -28,6 +28,52 @@ RSpec.describe GamesController, type: :controller do
       expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
       expect(flash[:alert]).to be # во flash должен быть прописана ошибка
     end
+
+    # аноним не может создавать действие create у GamesController
+    # games POST   /games(.:format)                games#create
+    it '#create post games without registration' do
+      post :create
+
+      expect(response.status).not_to eq(200) # статус не 200 ОК
+      expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
+      expect(flash[:alert]).to eq # во flash должен быть прописана ошибка
+    end
+
+    # answer_game PUT    /games/:id/answer(.:format)     games#answer
+    it '#answer put games without registration' do
+      put :answer, id: game_w_questions.id
+
+      expect(response.status).not_to eq(200) # статус не 200 ОК
+      expect(response).to redirect_to(new_user_session_path)
+      expect(flash[:alert]).to eq # во flash должен быть прописана ошибка
+    end
+
+    # take_money_game PUT    /games/:id/take_money(.:format) games#take_money
+    it '#take_money put games without registration' do
+      put :take_money, id: game_w_questions.id
+
+      expect(response.status).not_to eq(200) # статус не 200 ОК
+      expect(response).to redirect_to(new_user_session_path)
+      expect(flash[:alert]).to eq # во flash должен быть прописана ошибка
+    end
+
+    it 'kicks from #help' do
+      put :help, id: game_w_questions.id
+
+      expect(response.status).not_to eq(200) # статус не 200 ОК
+      expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
+      expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+    end
+
+    it 'cannot #answer (answer correct)' do
+      put :answer, id: game_w_questions.id, letter: 'b'
+      game = assigns(:game) # вытаскиваем из контроллера поле @game
+
+      expect(response.status).not_to eq(200) # статус не 200 ОК
+      expect(game).to be_nil
+      expect(response).to redirect_to(new_user_session_path)
+      expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+    end
   end
 
   # группа тестов на экшены контроллера, доступных залогиненным юзерам
