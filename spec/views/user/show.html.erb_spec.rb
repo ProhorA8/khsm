@@ -2,7 +2,8 @@ require 'rails_helper'
 
 RSpec.describe 'users/show', type: :view do
   let(:user) { create(:user, name: 'Zevs') } # залогиненный юзер
-  let(:another_user) { create(:user, name: 'Prometheus') } # не залогиненный юзер
+  let(:game) { create(:game, id: 15, created_at: Time.parse('2016.10.09, 13:00'), current_level: 10, prize: 1000
+  ) }
 
   context 'user see his own page' do
     before(:each) do
@@ -10,6 +11,8 @@ RSpec.describe 'users/show', type: :view do
       sign_in user # log in
       assign(:games, [build_stubbed(:game)]) # назначаем игру
 
+      allow(game).to receive(:status).and_return(:in_progress)
+      render partial: 'users/game', object: game
       render
     end
 
@@ -23,27 +26,6 @@ RSpec.describe 'users/show', type: :view do
 
     it 'renders game fragments' do
       expect(rendered).to match('в процессе')
-    end
-  end
-
-  context 'first user look at second user' do
-    before(:each) do
-      assign(:user, another_user)
-      assign(:games, [build_stubbed(:game)])
-
-      render
-    end
-
-    it 'renders second user name' do
-      expect(rendered).to match('Prometheus')
-    end
-
-    it 'renders game fragments' do
-      expect(rendered).to match('в процессе')
-    end
-
-    it 'renders change password' do
-      expect(rendered).not_to match('Сменить имя и пароль')
     end
   end
 end
